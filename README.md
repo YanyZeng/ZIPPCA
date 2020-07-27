@@ -1,5 +1,5 @@
 # ZIPPCA
-A general framework, Zero-Inflated Probabilistic PCA (ZIPPCA)
+A general framework, Zero-Inflated Probabilistic PCA (ZIPPCA), for dimension reduction and data ordination of multivariate abundance data, and propose an efficient variational approximation method for estimation,inference, and prediction.
 
 # Installation
 ```r
