@@ -1,27 +1,40 @@
-\title{ZIPPCA}
+
+# Usage
+```r
+ZIPPCAlnm(X, d_choice = FALSE)
+```
+* X: count matrix of observations.
+* d_choice: logical, if TRUE the rank or number of factors, or dimension after dimensional reduction, will be chosen from 1 to 5. Defaults to FALSE.
+
+
+# ZIPPCA
 A general framework, Zero-Inflated Probabilistic PCA (ZIPPCA)
 
+# Installation
+```r
 \title{Installation}
 install.packages("devtools")  
 devtools::install_github("YanyZeng/ZIPPCA")  
 library(ZIPPCA) 
+```
 
-\Description{
-Dimension reduction and ordination analysis are often applied to multivariate abundance data to visualize broad trends of how similar or different microbial communities are. However, this process is complicated by several statistical challenges. In particular, microbiome data produced by high-throughput sequencing are count-valued, correlated, high-dimensional, and over-dispersed with excess zeros. To address these challenges, we introduce a probabilistic framework by extending the standard factor analysis model, and propose a variational approximation algorithm for estimation, inference, and data ordination. We demonstrate the superior performance of the proposed method over existing ones on a number of simulated examples and a gut microbiome dataset.}
+# Description
+Dimension reduction and ordination analysis are often applied to multivariate abundance data to visualize broad trends of how similar or different microbial communities are. However, this process is complicated by several statistical challenges. In particular, microbiome data produced by high-throughput sequencing are count-valued, correlated, high-dimensional, and over-dispersed with excess zeros. To address these challenges, we introduce a probabilistic framework by extending the standard factor analysis model, and propose a variational approximation algorithm for estimation, inference, and data ordination. We demonstrate the superior performance of the proposed method over existing ones on a number of simulated examples and a gut microbiome dataset.
 
-\usage{
+# Usage
+```r
 ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, d_choice=FALSE, trace = FALSE, maxit = 100)
+```
+* X: matrix of observations.
+* V: vector of sample covariate.
+* family: distribution of models. Two options are "poisson" and "negative.binomial". Defaults to "negative.binomial".
+* n.factors: the number of latent factors, or dimension after dimensional reduction. Defaults to 2.
+* d_choice: logical, if TRUE the number of latent factors, or dimension after dimensional reduction, will be chosen from 1 to 5. Defaults to FALSE.
+* trace: logical, defaults to \code{FALSE}. if \code{TRUE} each current iteration step information will be printed.
+* maxit: maximum number of iterations within \code{optim} and \code{constrOptim} function, defaults to 100.
 
-\item{X}{ matrix of observations.}
-\item{V}{ vector of sample covariate.}
-\item{family}{ distribution of models. Two options are "poisson" and "negative.binomial". Defaults to "negative.binomial".}
-\item{n.factors}{ the number of latent factors, or dimension after dimensional reduction. Defaults to 2.}
-\item{d_choice}{ logical, if TRUE the number of latent factors, or dimension after dimensional reduction, will be chosen from 1 to 5. Defaults to FALSE.}
-\item{trace}{ logical, defaults to \code{FALSE}. if \code{TRUE} each current iteration step information will be printed.}
-\item{maxit}{ maximum number of iterations within \code{optim} and \code{constrOptim} function, defaults to 100.}
-}}
-
-\examples{
+# examples
+```
  n.n = 100
  n.m = 50
  n.factors = 2
@@ -61,4 +74,4 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, d_cho
  result <- ZIPPCA::ZIPPCApn(X)
  f_coordinates <- result$lvs$factor_scores
  }
- 
+ ```
