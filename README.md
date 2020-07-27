@@ -20,8 +20,8 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, d_cho
 * family: distribution of models. Two options are "poisson" and "negative.binomial". Defaults to "negative.binomial".
 * n.factors: the number of latent factors, or dimension after dimensional reduction. Defaults to 2.
 * d_choice: logical, if TRUE the number of latent factors, or dimension after dimensional reduction, will be chosen from 1 to 5. Defaults to FALSE.
-* trace: logical, defaults to \code{FALSE}. if \code{TRUE} each current iteration step information will be printed.
-* maxit: maximum number of iterations within \code{optim} and \code{constrOptim} function, defaults to 100.
+* trace: logical, defaults to FALSE. if TRUE each current iteration step information will be printed.
+* maxit: maximum number of iterations within optim and constrOptim function, defaults to 100.
 
 # examples
 ```
