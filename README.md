@@ -1,18 +1,8 @@
-
-# Usage
-```r
-ZIPPCAlnm(X, d_choice = FALSE)
-```
-* X: count matrix of observations.
-* d_choice: logical, if TRUE the rank or number of factors, or dimension after dimensional reduction, will be chosen from 1 to 5. Defaults to FALSE.
-
-
 # ZIPPCA
 A general framework, Zero-Inflated Probabilistic PCA (ZIPPCA)
 
 # Installation
 ```r
-\title{Installation}
 install.packages("devtools")  
 devtools::install_github("YanyZeng/ZIPPCA")  
 library(ZIPPCA) 
