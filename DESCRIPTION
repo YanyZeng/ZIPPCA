@@ -1,0 +1,17 @@
+Package: ZIPPCA
+Type: Package
+Title: Zero-Inflated Probabilistic PCA (ZIPPCA, pronounced zipcar)
+Version: 0.1.0
+Author: Yanyan Zeng
+Maintainer: Yanyan Zeng <zengyanyan@sjtu.edu.cn>
+Description: Zero-Inflated Probabilistic PCA (ZIPPCA), 
+             for dimension reduction and data ordination of multivariate abundance data,
+             and propose an efficient variational approximation method for estimation, 
+             inference, and prediction.
+License: GPL-2
+Encoding: UTF-8
+URL: https://github.com/yanyanZeng/zippca.git
+Repository: CRAN
+Depends: mvabund
+Publication: 
+RoxygenNote: 7.1.0
