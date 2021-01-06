@@ -78,7 +78,10 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, d_cho
   ZIPNVA <- function(X,V,family = "negative.binomial",n.factors,trace,maxit) {
 
     n.s<-dim(X)[1]; n.f<-dim(X)[2];
-    if(is.null(V)){Y <- 0}else{Y <- V}
+    if(is.null(V)){Y <- 0
+    }else if(is.numeric(V)){Y <- V
+    }else{
+      Y <- as.numeric(as.factor(V))-1}
 
     out.list <- list()
 
