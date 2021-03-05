@@ -3,12 +3,13 @@
 #' and propose an efficient variational approximation method for estimation,inference, and prediction.
 #'
 #' @param X matrix of observations.
-#' @param V vector of sample covariate.
+#' @param V vector of the sample covariate.
 #' @param family distribution of models. Two options are "poisson" and "negative.binomial". Defaults to "negative.binomial".
-#' @param n.factors the number of latent factors, or dimension after dimensional reduction. Defaults to 2.
-#' @param d_choice logical, if TRUE the number of latent factors, or dimension after dimensional reduction, will be chosen from 1 to 5. Defaults to FALSE.
+#' @param n.factors the rank or number of factors, after dimensional reduction. Defaults to 2.
+#' @param rank logical, if TRUE, the rank or number of factors, is chosen from 1 to 5 by HIC (hybrid information criterion). Defaults to FALSE.
 #' @param trace logical, defaults to \code{FALSE}. if \code{TRUE} each current iteration step information will be printed.
 #' @param maxit maximum number of iterations within \code{optim} and \code{constrOptim} function, defaults to 100.
+#' @param parallel logical, if TRUE, use parallel toolbox to accelerate.
 
 #' @return
 #'
@@ -27,9 +28,9 @@
 #'    \item{gamma }{ coeffcients of sample covariate}
 #'    \item{dispersion }{ taxon-specific over-dispersion parameter for negative binomial distribution}
 #'    }}
-#'  \item{Q }{ the underlying composition of microbiome data}
-#'  \item{BIC }{ if d_choice is TRUE, the number of the rank or factors, or dimension, will be chosen by a BIC type information criterion}
+#'  \item{hic}{ the number of the rank selection, chosen by HIC type information criterion}
 
+#'  
 #' @examples
 #'  n.n = 100
 #'  n.m = 50
@@ -72,10 +73,10 @@
 #' @export
 #'
 
-ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, d_choice=FALSE,
-                     trace = FALSE, maxit = 100){
+ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=FALSE,
+                     trace = FALSE, maxit = 100, parallel=TRUE){
 
-  ZIPNVA <- function(X,V,family = "negative.binomial",n.factors,trace,maxit) {
+  ZIPNVA <- function(X,V,family = "negative.binomial",n.factors,trace,maxit,parallel) {
 
     n.s<-dim(X)[1]; n.f<-dim(X)[2];
     if(is.null(V)){Y <- 0
@@ -595,126 +596,198 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, d_cho
     if(family=="negative.binomial"){
       ll <- matrix(new.factor_coefs_0,n.s,n.f,byrow=TRUE)+matrix(new.gamma,n.s,n.f,byrow=TRUE)*Y + matrix(alpha,n.s,n.f) + factor_scores %*% t(factor_coefs_j)
       dispersion.mat <- matrix(dispersion,n.s,n.f,byrow=TRUE)
-      e.mat <- ll - 0.5 * (sigma) %*% t(factor_coefs_j^2)
-      Q_nb <- exp(e.mat)/rowSums(exp(e.mat))
-
+      e.mat <- ll + 0.5 * (sigma) %*% t(factor_coefs_j^2)
+      e.mat2 <- matrix(new.factor_coefs_0,n.s,n.f,byrow=TRUE)+matrix(new.gamma,n.s,n.f,byrow=TRUE)*Y  + matrix(alpha,n.s,n.f)+ factor_scores %*% t(factor_coefs_j) - 0.5 * (sigma) %*% t(factor_coefs_j^2)
+      e.mat3 <- matrix(new.factor_coefs_0,n.s,n.f,byrow=TRUE)+matrix(new.gamma,n.s,n.f,byrow=TRUE)*Y  + factor_scores %*% t(factor_coefs_j) + 0.5 * (sigma) %*% t(factor_coefs_j^2)
+      
+      mu_p <- (exp(e.mat)+dispersion.mat)/(1+dispersion.mat/exp(e.mat2))
+      Q_nb <- mu_p/rowSums(mu_p)
+      Q_nb_z <- (1-new.pi)*mu_p/(rowSums((1-new.pi)*mu_p))
+      mu_z <- (1-new.pi)*exp(e.mat3)
     }
     if(family=="poisson"){
       ll <- matrix(new.factor_coefs_0,n.s,n.f,byrow=TRUE)+matrix(new.gamma,n.s,n.f,byrow=TRUE)*Y + matrix(alpha,n.s,n.f) + factor_scores %*% t(factor_coefs_j)
       e.mat <- ll + 0.5 * (sigma) %*% t(factor_coefs_j^2)
       Q_poi <- exp(e.mat)/rowSums(exp(e.mat))
+      Q_poi_z <- (1-new.pi)*exp(e.mat)/(rowSums((1-new.pi)*exp(e.mat)))
+      e.mat2 <- matrix(new.factor_coefs_0,n.s,n.f,byrow=TRUE)+matrix(new.gamma,n.s,n.f,byrow=TRUE)*Y  + factor_scores %*% t(factor_coefs_j) + 0.5 * (sigma) %*% t(factor_coefs_j^2)
+      mu_z <- (1-new.pi)*exp(e.mat2)
+      
     }
-
-    # factor_scores <- scale(new.factor_scores)
-    # factor_coefs_j <- scale(new.factor_coefs_j)
-
+    
     ## print the output
     out.list$VLB <- cur.VLB
-    out.list$lob <- cur.log
+    out.list$CLL <- cur.log
     out.list$iter=iter-1
     out.list$lvs$pi <- pi
     out.list$lvs$factor_scores <- factor_scores
-    out.list$lvs$factor_scores[!is.finite(out.list$lvs$factor_scores)] <- 0
     out.list$lvs$sigma <- sigma
     out.list$params$eta <- eta
     out.list$params$factor_coefs_j <- factor_coefs_j
-    out.list$params$factor_coefs_j[!is.finite(out.list$params$factor_coefs_j)] <- 0
     out.list$params$factor_coefs_0 <- factor_coefs_0
     out.list$params$gamma <- gamma
     out.list$params$alpha <- alpha
     if(family=="negative.binomial"){
       out.list$params$dispersion <- dispersion
-      out.list$mu <- exp(e.mat)
-      out.list$ll <- ll
+      out.list$mu <- exp(e.mat3)
       out.list$Q <- Q_nb
+      out.list$muz <- mu_z
+      out.list$Qz <- Q_nb_z
     }
     if(family=="poisson"){
       out.list$Q <- Q_poi
-      out.list$mu <- exp(e.mat)
-      out.list$ll <- ll
+      out.list$mu <- exp(e.mat2)
+      out.list$muz <- mu_z
+      out.list$Qz <- Q_poi_z
     }
-
     return(out.list)
   }
 
-  if(d_choice==FALSE & family == "negative.binomial"){
-    re <- ZIPNVA(X,V,family = "negative.binomial",n.factors,trace,maxit)
-  }else if(d_choice==FALSE & family == "poisson"){
-    re <- ZIPNVA(X,V,family = "poisson",n.factors,trace,maxit)
-  }else if(d_choice==TRUE){
-    out.list <- list()
-    beta <- list()
-    eta <- list()
-    beta0 <- list()
-    gamma <- list()
-    alpha <- list()
-    f <- list()
-    sigma <- list()
-    pi <- list()
-    Q <- list()
-
+  if(rank==FALSE & family == "negative.binomial"){
+    re <- ZIPNVA(X,V,family = "negative.binomial",n.factors,trace,maxit,parallel)
+  }else if(rank==FALSE & family == "poisson"){
+    re <- ZIPNVA(X,V,family = "poisson",n.factors,trace,maxit,parallel)
+  }else if(rank==TRUE){
+    if (parallel){
+      #cl <- parallel::makeCluster(detectCores(logical = FALSE))
+      cl <- parallel::makeCluster(getOption("cl.cores", 4))
+      doParallel::registerDoParallel(cl)
+    }
     p <- ncol(X)
     n <- nrow(X)
-    r=5
-    L <- rep(0,r);lob <- rep(0,r);bic <- rep(0,r);
-
+    r <- 5
+    fold <- 5
+    beta <- list()
+    beta0 <- list()
+    f <- list()
+    pi <- list()
+    gamma <- list()
+    alpha <- list()
+    sigma <- list()
+    eta <- list()
+    Q <- list()
+    mu <- list()
+    Qz <- list()
+    muz <- list()
+    L <- rep(0,r); lob <- rep(0,r)
+    iter <- rep(0,r)
+    hic <- rep(0,r);
+    
     if(family == "negative.binomial"){
       dispersion <- list()
-      for(w in 1:r){
-        re <- ZIPNVA(X,V,n.factors=w,family = "negative.binomial",trace,maxit)
-        L[w] <- re$VLB
-        lob[w] <- re$lob
-        beta[[w]] <- re$params$factor_coefs_j
-        beta0[[w]] <- re$params$factor_coefs_0
-        alpha[[w]] <- re$params$alpha
-        gamma[[w]] <- re$params$gamma
-        eta[[w]] <- re$params$eta
-        dispersion[[w]] <- re$params$dispersion
-
-        f[[w]] <- re$lvs$factor_scores
-        pi[[w]] <- re$lvs$pi
-        sigma[[w]] <- re$lvs$sigma
-        Q[[w]] <- re$Q
-
-      }}else if (family == "poisson"){
+      if (parallel){
+        Mres <- foreach::foreach(w=1:r) %dopar% {
+          re <- ZIPNVA(X,V,family = "negative.binomial",n.factors=w,trace,maxit,parallel)
+          re
+        }
         for(w in 1:r){
-          re <- ZIPNVA(X,V,n.factors=w,family = "poisson",trace,maxit)
+          L[w] <- Mres[[w]]$VLB
+          lob[w] <-  Mres[[w]]$CLL
+          iter[w] <- Mres[[w]]$iter
+          beta[[w]] <- Mres[[w]]$params$factor_coefs_j
+          beta0[[w]] <- Mres[[w]]$params$factor_coefs_0
+          gamma[[w]] <- Mres[[w]]$params$gamma
+          alpha[[w]] <- Mres[[w]]$params$alpha
+          dispersion[[w]] <- Mres$params$dispersion
+          f[[w]] <- Mres[[w]]$lvs$factor_scores
+          sigma[[w]] <- Mres[[w]]$lvs$sigma
+          pi[[w]] <- Mres[[w]]$lvs$pi
+          eta[[w]] <- Mres[[w]]$params$eta
+          mu[[w]] <- Mres[[w]]$mu
+          Qz[[w]] <- Mres[[w]]$Qz
+          Q[[w]] <- Mres[[w]]$Q
+          muz[[w]] <- Mres[[w]]$muz
+          hic[w] <- -2*lob[w]+log(n)*(w*p-w^2)+2*w*n
+        }
+      }else{
+        for(w in 1:r){
+          re <- ZIPNVA(X,V,family = "negative.binomial",n.factors=w,trace,maxit,parallel=FALSE)
           L[w] <- re$VLB
-          lob[w] <- re$lob
+          lob[w] <- re$CLL
+          iter[w] <- re$iter
           beta[[w]] <- re$params$factor_coefs_j
           beta0[[w]] <- re$params$factor_coefs_0
-          alpha[[w]] <- re$params$alpha
           gamma[[w]] <- re$params$gamma
-          eta[[w]] <- re$params$eta
-
-          f[[w]] <- re$lvs$factor_scores
-          pi[[w]] <- re$lvs$pi
+          alpha[[w]] <- re$params$alpha
+          dispersion[[w]] <- re$params$dispersion
           sigma[[w]] <- re$lvs$sigma
+          f[[w]] <- re$lvs$factor_scores
+          eta[[w]] <- re$params$eta
+          pi[[w]] <- re$lvs$pi
           Q[[w]] <- re$Q
-
+          mu[[w]] <- re$mu
+          Qz[[w]] <- re$Qz
+          muz[[w]] <- re$muz
+          hic[w] <- -2*lob[w]+log(n)*(w*p-w^2)+2*w*n
+        }
+      }}else if (family == "poisson"){
+        if (parallel){
+          Mres <- foreach::foreach(w=1:r) %dopar% {
+            re <- ZIPNVA(X,V,family = "poisson",n.factors=w,trace,maxit,parallel)
+            re
+          }
+          for(w in 1:r){
+            L[w] <- Mres[[w]]$VLB
+            lob[w] <-  Mres[[w]]$CLL
+            iter[w] <- Mres[[w]]$iter
+            beta[[w]] <- Mres[[w]]$params$factor_coefs_j
+            beta0[[w]] <- Mres[[w]]$params$factor_coefs_0
+            gamma[[w]] <- Mres[[w]]$params$gamma
+            alpha[[w]] <- Mres[[w]]$params$alpha
+            f[[w]] <- Mres[[w]]$lvs$factor_scores
+            sigma[[w]] <- Mres[[w]]$lvs$sigma
+            pi[[w]] <- Mres[[w]]$lvs$pi
+            eta[[w]] <- re$params$eta
+            mu[[w]] <- Mres[[w]]$mu
+            Qz[[w]] <- Mres[[w]]$Qz
+            Q[[w]] <- Mres[[w]]$Q
+            muz[[w]] <- Mres[[w]]$muz
+            hic[w] <- -2*lob[w]+log(n)*(w*p-w^2)+2*w*n
+          }
+        }else{
+          for(w in 1:r){
+            re <- ZIPNVA(X,V,family = "poisson",n.factors=w,trace,maxit,parallel=FALSE)
+            L[w] <- re$VLB
+            lob[w] <- re$CLL
+            iter[w] <- re$iter
+            beta[[w]] <- re$params$factor_coefs_j
+            beta0[[w]] <- re$params$factor_coefs_0
+            gamma[[w]] <- re$params$gamma
+            alpha[[w]] <- re$params$alpha
+            sigma[[w]] <- re$lvs$sigma
+            f[[w]] <- re$lvs$factor_scores
+            eta[[w]] <- re$params$eta
+            pi[[w]] <- re$lvs$pi
+            Q[[w]] <- re$Q
+            mu[[w]] <- re$mu
+            Qz[[w]] <- re$Qz
+            muz[[w]] <- re$muz
+            hic[w] <- -2*lob[w]+log(n)*(w*p-w^2)+2*w*n
+          }
         }}
-
-    for(w in 1:r){
-      bic[w] <- -2*lob[w]+log(n)*(w*p-w^2)+2*w*n
-    }
-
-    out.list$BIC <- which.min(bic)
-    out.list$VLB <- L
-    out.list$lvs$pi <- pi
-    out.list$lvs$factor_scores <- f
-    out.list$lvs$sigma <- sigma
-    out.list$params$factor_coefs_j <- beta
-    out.list$params$factor_coefs_0 <- beta0
-    out.list$params$alpha <- alpha
-    out.list$params$gamma <- gamma
-    out.list$params$eta <- eta
-    out.list$Q <- Q
-
+    
+    out.list$hic <- which.min(hic)
+    out.list$VLB <- L[[which.min(hic)]]
+    out.list$CLL <- lob[[which.min(hic)]]
+    out.list$iter <- iter[[which.min(hic)]]
+    out.list$lvs$pi <- pi[[which.min(hic)]]
+    out.list$lvs$factor_scores <- f[[which.min(hic)]]
+    out.list$lvs$sigma <- sigma[[which.min(hic)]]
+    out.list$params$factor_coefs_j <- beta[[which.min(hic)]]
+    out.list$params$factor_coefs_0 <- beta0[[which.min(hic)]]
+    out.list$params$alpha <- alpha[[which.min(hic)]]
+    out.list$params$gamma <- gamma[[which.min(hic)]]
+    out.list$params$eta <- eta[[which.min(hic)]]
+    
     if(family=="negative.binomial"){
-      out.list$params$dispersion <- dispersion
+      out.list$params$dispersion <- dispersion[[which.min(hic)]]
+    }
+    
+    if (parallel){
+      parallel::stopCluster(cl = cl)
     }
     return(out.list)
-
+    
   }
 }
 
