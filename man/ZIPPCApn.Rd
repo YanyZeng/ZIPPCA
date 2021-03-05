@@ -5,23 +5,27 @@
 \title{ZIPPCA}
 \usage{
 ZIPPCApn(X, V = NULL, family = "negative.binomial", n.factors = 2,
-         d_choice = FALSE, trace = FALSE, maxit = 100)
+         rank = FALSE, trace = FALSE, maxit = 100, parallel=TRUE)
 }
 \arguments{
 \item{X}{matrix of observations.}
 
-\item{V}{vector of sample covariate.}
+\item{V}{vector of the sample covariate.}
 
 \item{family}{distribution of models. Two options are "poisson" and "negative.binomial". Defaults to "negative.binomial".}
 
-\item{n.factors}{the number of latent factors, or dimension after dimensional reduction. Defaults to 2.}
+\item{n.factors}{the rank or number of factors, after dimensional reduction. Defaults to 2.}
 
-\item{d_choice}{logical, if TRUE the number of latent factors, or dimension after dimensional reduction, will be chosen from 1 to 5. Defaults to FALSE.}
+\item{rank}{logical, if TRUE, the rank or number of factors, is chosen from 1 to 5 by HIC (hybrid information criterion). Defaults to FALSE.}
 
 \item{trace}{logical, defaults to \code{FALSE}. if \code{TRUE} each current iteration step information will be printed.}
 
 \item{maxit}{maximum number of iterations within \code{optim} and \code{constrOptim} function, defaults to 100.}
 }
+
+\item{paralell}{logical, if TRUE, use parallel toolbox to accelerate.}
+}
+
 \value{
 \item{VLB }{ variational lower bound of log likelihood}
  \item{lvs}{list of latent variables
@@ -37,8 +41,7 @@ ZIPPCApn(X, V = NULL, family = "negative.binomial", n.factors = 2,
    \item{gamma }{ coeffcients of sample covariate}
    \item{dispersion }{ taxon-specific over-dispersion parameter for negative binomial distribution}
    }}
- \item{Q }{ the underlying composition of microbiome data}
- \item{BIC }{ if d_choice is TRUE, the number of the rank or factors, or dimension, will be chosen by a BIC type information criterion}
+ \item{hic }{ the number of the rank selection, chosen by HIC type information criterion}
 }
 \description{
 Zero-Inflated Probabilistic PCA (ZIPPCA), for dimension reduction and data ordination of multivariate abundance data, and propose an efficient variational approximation method for estimation, inference, and prediction.
