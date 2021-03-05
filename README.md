@@ -13,15 +13,16 @@ Dimension reduction and ordination analysis are often applied to multivariate ab
 
 # Usage
 ```r
-ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, d_choice=FALSE, trace = FALSE, maxit = 100)
+ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=FALSE, trace = FALSE, maxit = 100, parallel=TRUE)
 ```
 * X: matrix of observations.
-* V: vector of sample covariate.
+* V: vector of the sample covariate.
 * family: distribution of models. Two options are "poisson" and "negative.binomial". Defaults to "negative.binomial".
-* n.factors: the number of latent factors, or dimension after dimensional reduction. Defaults to 2.
-* d_choice: logical, if TRUE the number of latent factors, or dimension after dimensional reduction, will be chosen from 1 to 5. Defaults to FALSE.
+* n.factors: the rank or number of factors, after dimensional reduction. Defaults to 2.
+* rank: logical, if TRUE, the rank or number of factors, is chosen from 1 to 5 by HIC (hybrid information criterion). Defaults to FALSE.
 * trace: logical, defaults to FALSE. if TRUE each current iteration step information will be printed.
 * maxit: maximum number of iterations within optim and constrOptim function, defaults to 100.
+* parallel: logical, if TRUE, use parallel toolbox to accelerate.
 
 # examples
 ```
