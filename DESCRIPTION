@@ -12,6 +12,6 @@ License: GPL-2
 Encoding: UTF-8
 URL: https://github.com/yanyanZeng/zippca.git
 Repository: CRAN
-Depends: mvabund
+Depends: mvabund,parallel,foreach,doParallel
 Publication: 
 RoxygenNote: 7.1.0
