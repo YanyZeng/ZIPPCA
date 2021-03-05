@@ -688,7 +688,7 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=
           beta0[[w]] <- Mres[[w]]$params$factor_coefs_0
           gamma[[w]] <- Mres[[w]]$params$gamma
           alpha[[w]] <- Mres[[w]]$params$alpha
-          dispersion[[w]] <- Mres$params$dispersion
+          dispersion[[w]] <- Mres[[w]]$params$dispersion
           f[[w]] <- Mres[[w]]$lvs$factor_scores
           sigma[[w]] <- Mres[[w]]$lvs$sigma
           pi[[w]] <- Mres[[w]]$lvs$pi
