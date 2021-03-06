@@ -10,7 +10,7 @@ Description: Zero-Inflated Probabilistic PCA (ZIPPCA),
              inference, and prediction.
 License: GPL-2
 Encoding: UTF-8
-URL: https://github.com/yanyanZeng/ZIPPCA.git
+URL: https://github.com/YanyZeng/ZIPPCA.git
 Repository: CRAN
 Depends: mvabund,parallel,foreach,doParallel
 Publication: 
