@@ -76,7 +76,7 @@
 ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=FALSE,
                      trace = FALSE, maxit = 100, parallel=TRUE){
 
-  ZIPNVA <- function(X,V,family = "negative.binomial",n.factors,trace,maxit,parallel) {
+  ZIPNVA <- function(X,V,family = "negative.binomial",n.factors,trace,maxit) {
 
     n.s<-dim(X)[1]; n.f<-dim(X)[2];
     if(is.null(V)){Y <- 0
@@ -644,9 +644,9 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=
   }
 
   if(rank==FALSE & family == "negative.binomial"){
-    re <- ZIPNVA(X,V,family = "negative.binomial",n.factors,trace,maxit,parallel)
+    re <- ZIPNVA(X,V,family = "negative.binomial",n.factors,trace,maxit)
   }else if(rank==FALSE & family == "poisson"){
-    re <- ZIPNVA(X,V,family = "poisson",n.factors,trace,maxit,parallel)
+    re <- ZIPNVA(X,V,family = "poisson",n.factors,trace,maxit)
   }else if(rank==TRUE){
     if (parallel){
       #cl <- parallel::makeCluster(detectCores(logical = FALSE))
@@ -677,7 +677,7 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=
       dispersion <- list()
       if (parallel){
         Mres <- foreach::foreach(w=1:r) %dopar% {
-          re <- ZIPNVA(X,V,family = "negative.binomial",n.factors=w,trace,maxit,parallel)
+          re <- ZIPNVA(X,V,family = "negative.binomial",n.factors=w,trace,maxit)
           re
         }
         for(w in 1:r){
@@ -701,7 +701,7 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=
         }
       }else{
         for(w in 1:r){
-          re <- ZIPNVA(X,V,family = "negative.binomial",n.factors=w,trace,maxit,parallel=FALSE)
+          re <- ZIPNVA(X,V,family = "negative.binomial",n.factors=w,trace,maxit)
           L[w] <- re$VLB
           lob[w] <- re$CLL
           iter[w] <- re$iter
@@ -723,7 +723,7 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=
       }}else if (family == "poisson"){
         if (parallel){
           Mres <- foreach::foreach(w=1:r) %dopar% {
-            re <- ZIPNVA(X,V,family = "poisson",n.factors=w,trace,maxit,parallel)
+            re <- ZIPNVA(X,V,family = "poisson",n.factors=w,trace,maxit)
             re
           }
           for(w in 1:r){
@@ -746,7 +746,7 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=
           }
         }else{
           for(w in 1:r){
-            re <- ZIPNVA(X,V,family = "poisson",n.factors=w,trace,maxit,parallel=FALSE)
+            re <- ZIPNVA(X,V,family = "poisson",n.factors=w,trace,maxit)
             L[w] <- re$VLB
             lob[w] <- re$CLL
             iter[w] <- re$iter
