@@ -22,7 +22,7 @@ ZIPPCApn(X, V = NULL, family = "negative.binomial", n.factors = 2,
 
 \item{maxit}{maximum number of iterations within \code{optim} and \code{constrOptim} function, defaults to 100.}
 
-\item{paralell}{logical, if TRUE, use parallel toolbox to accelerate.}
+\item{parallel}{logical, if TRUE, use parallel toolbox to accelerate.}
 }
 
 \value{
