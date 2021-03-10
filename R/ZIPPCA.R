@@ -653,6 +653,7 @@ ZIPPCApn <- function(X, V=NULL, family = "negative.binomial", n.factors=2, rank=
       cl <- parallel::makeCluster(getOption("cl.cores", 4))
       doParallel::registerDoParallel(cl)
     }
+    out.list <- list()
     p <- ncol(X)
     n <- nrow(X)
     r <- 5
